@@ -1,7 +1,7 @@
+export const runtime = 'edge';
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
 function normalizeEnvValue(value: string) {
   const noBom = value.replace(/^\uFEFF/, "");
