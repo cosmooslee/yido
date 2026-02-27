@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
@@ -90,6 +90,35 @@ export async function POST(request: Request) {
         debug: {
           accountIdLength: accountId.length,
           accountIdPreview: `${accountId.slice(0, 6)}...${accountId.slice(-4)}`,
+        },
+      },
+      { status: 500 },
+    );
+  }
+
+  // 실제 규칙 생성 전에 토큰 자체 유효성부터 확인해서 원인을 빠르게 노출
+  const verifyRes = await fetch(
+    "https://api.cloudflare.com/client/v4/user/tokens/verify",
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    },
+  );
+  const verifyData = await verifyRes.json().catch(() => null);
+  if (!verifyRes.ok || verifyData?.success === false) {
+    return NextResponse.json(
+      {
+        error:
+          "Cloudflare API 토큰 검증에 실패했습니다. 토큰 값이 잘못되었거나 만료/폐기되었을 가능성이 큽니다.",
+        details: verifyData,
+        debug: {
+          endpoint: "https://api.cloudflare.com/client/v4/user/tokens/verify",
+          status: verifyRes.status,
+          statusText: verifyRes.statusText,
         },
       },
       { status: 500 },
